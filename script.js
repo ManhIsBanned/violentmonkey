@@ -3,9 +3,9 @@
 // @namespace    http://test.local
 // @version      5.0
 // @description  Random fingerprint + User-Agent riêng cho mỗi tab với UA mới nhất
-// @match        https://sso.garena.com/universal/register*
-// @match        https://account.garena.com*
-// @match        https://sso.garena.com*
+// @match        https://sso.garena.com/universal/register/*
+// @match        https://account.garena.com/*
+// @match        https://sso.garena.com/*
 // @grant        none
 // ==/UserScript==
 
