@@ -3,9 +3,9 @@
 // @namespace    http://test.local
 // @version      5.0
 // @description  Random fingerprint + User-Agent riêng cho mỗi tab với UA mới nhất
-// @match        https://sso.garena.com*
+// @match        https://sso.garena.com/universal/register*
 // @match        https://account.garena.com*
-// @match        https://*.garena.com*
+// @match        https://sso.garena.com*
 // @grant        none
 // ==/UserScript==
 
@@ -279,15 +279,6 @@
     delete window.cdc_adoQpoasnfa76pfcZLmcfl_Promise;
     delete window.cdc_adoQpoasnfa76pfcZLmcfl_Symbol;
     
-    // Override automation detection
-    Object.defineProperty(window, 'chrome', {
-        get: () => ({
-            runtime: {},
-            loadTimes: function() {},
-            csi: function() {},
-            app: {}
-        })
-    });
 
     // ---- 11. Debug info ----
     console.log("✅ Anti-Automation Tab+UA script fully active with fingerprint:", {
