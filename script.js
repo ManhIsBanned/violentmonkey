@@ -3,7 +3,7 @@
 // @namespace   Violentmonkey Scripts
 // @match       *://*/*
 // @grant       none
-// @version     1.1
+// @version     1.2
 // @author      -
 // @description Evades detection by spoofing browser properties.
 // @run-at      document-start
@@ -132,6 +132,20 @@
         // in non-extension contexts. While we can't remove it without breaking things,
         // we can clean up other potential giveaways if needed.
         // For now, we keep it simple to avoid breaking legitimate functionality.
+    }
+
+    // 6. Spoof mobile network connection
+    if (navigator.connection) {
+        const connection = {
+            downlink: 10,
+            effectiveType: '4g',
+            rtt: 50,
+            saveData: false,
+            type: 'cellular'
+        };
+        safeDefineProperty(navigator, 'connection', {
+            get: () => connection
+        });
     }
 
 })();
