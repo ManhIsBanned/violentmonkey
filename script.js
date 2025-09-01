@@ -3,9 +3,9 @@
 // @namespace    http://test.local
 // @version      5.0
 // @description  Random fingerprint + User-Agent riêng cho mỗi tab với UA mới nhất
-// @match        https://sso.garena.com/universal/register/*
-// @match        https://account.garena.com/*
-// @match        https://sso.garena.com/*
+// @match        https://sso.garena.com/universal/register*
+// @match        https://account.garena.com*
+// @match        https://sso.garena.com*
 // @grant        none
 // ==/UserScript==
 
@@ -15,46 +15,87 @@
 
     function randomChoice(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
 
+    // New User-Agent lists
+    const desktopUserAgents = [
+        // Chrome 120-122 Windows (mới nhất 2024)
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0",
+        
+        // Chrome Windows 11
+        "Mozilla/5.0 (Windows NT 11.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 11.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+        
+        // Mac Chrome mới nhất
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        
+        // Mac M1/M2
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15",
+        
+        // Linux Chrome
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0",
+        
+        // Edge mới nhất
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0",
+        
+        // Firefox mới nhất
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:121.0) Gecko/20100101 Firefox/121.0"
+    ];
+
+    const mobileUserAgents = [
+        // Android Chrome
+        "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+        "Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Mobile Safari/537.36",
+        "Mozilla/5.0 (Linux; Android 12; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36",
+        "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+        "Mozilla/5.0 (Linux; Android 14; SM-S901U) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Mobile Safari/537.36",
+        
+        // iOS Safari/Chrome
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1",
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/120.0.0.0 Mobile/15E148 Safari/604.1",
+        "Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/121.0.0.0 Mobile/15E148 Safari/604.1",
+        
+        // Other mobile-like (from original list)
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Mobile",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Mobile"
+    ];
+
+    // New screen resolutions for mobile
+    const mobileScreenResolutions = [
+        [360, 640], [375, 667], [414, 896], [390, 844], [428, 926], // Common phone resolutions
+        [768, 1024], [810, 1080], [834, 1194], // Common tablet resolutions
+        [320, 568], [375, 812] // Older/smaller phones
+    ];
+
+    // New platforms for mobile
+    const mobilePlatforms = ['Android', 'iPhone', 'iPad', 'Linux armv7l']; // Keep Linux armv7l for some Androids
+    const desktopPlatforms = ['Win32', 'Win64', 'MacIntel', 'Linux x86_64'];
+
     // ---- 1. Generate tab fingerprint với UA mới nhất ----
     function generateRandomFP() {
-        const currentUserAgents = [
-            // Chrome 120-122 Windows (mới nhất 2024)
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0",
-            
-            // Chrome Windows 11
-            "Mozilla/5.0 (Windows NT 11.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Mozilla/5.0 (Windows NT 11.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
-            
-            // Mac Chrome mới nhất
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-            
-            // Mac M1/M2
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15",
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15",
-            
-            // Linux Chrome
-            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
-            "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0",
-            
-            // Edge mới nhất
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0",
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0",
-            
-            // Firefox mới nhất
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0",
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:121.0) Gecko/20100101 Firefox/121.0",
-            
-            // Mobile-like (cho đa dạng)
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Mobile",
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Mobile"
-        ];
+        // Always generate a mobile fingerprint
+        const selectedUA = randomChoice(mobileUserAgents);
+        let selectedPlatform;
+        let selectedScreenResolution = randomChoice(mobileScreenResolutions);
+
+        if (selectedUA.includes("Android")) {
+            selectedPlatform = "Android";
+        } else if (selectedUA.includes("iPhone")) {
+            selectedPlatform = "iPhone";
+        } else if (selectedUA.includes("iPad")) {
+            selectedPlatform = "iPad";
+        } else {
+            selectedPlatform = randomChoice(mobilePlatforms); // Fallback for other mobile-like UAs
+        }
 
         return {
             languages: randomChoice([
@@ -62,34 +103,26 @@
                 ['vi-VN','vi','en']
             ]),
             plugins: new Array(Math.floor(Math.random()*8)+2).fill(0), // 2-9 plugins
-            platform: randomChoice(['Win32','Win64','MacIntel','Linux x86_64','Linux armv7l']),
-            hardwareConcurrency: randomChoice([2,4,6,8,12,16]),
-            deviceMemory: randomChoice([2,4,8,16,32]),
-            maxTouchPoints: randomChoice([0,1,2,5,10]),
+            platform: selectedPlatform,
+            hardwareConcurrency: randomChoice([2,4,6,8]), // More typical for mobile
+            deviceMemory: randomChoice([2,4,6,8]), // More typical for mobile
+            maxTouchPoints: randomChoice([1,2,5]), // Mobile devices have touch points
             vendor: randomChoice([
-                "Intel Inc.",
-                "NVIDIA Corporation", 
-                "AMD",
-                "Apple Inc.",
+                "Google Inc.", // Common for Android
+                "Apple Inc.", // Common for iOS
                 "Qualcomm",
                 "ARM"
             ]),
             renderer: randomChoice([
-                "Intel Iris OpenGL Engine",
-                "NVIDIA GeForce RTX 3060/PCIe/SSE2",
-                "NVIDIA GeForce RTX 4070/PCIe/SSE2", 
-                "AMD Radeon Pro 560X OpenGL Engine",
-                "AMD Radeon RX 6700 XT",
-                "Apple M1",
-                "Apple M2",
-                "Intel UHD Graphics 630",
-                "ANGLE (Intel, Intel(R) UHD Graphics 630 Direct3D11 vs_5_0 ps_5_0)"
+                "Adreno (TM) 650", // Common Android GPU
+                "Apple GPU", // Common iOS GPU
+                "Mali-G77 MC9", // Common Android GPU
+                "ANGLE (Google, Vulkan 1.2.0 (SwiftShader), SwiftShader)", // Software renderer
+                "ANGLE (Apple, Apple M1 GPU, OpenGL 4.1)"
             ]),
-            userAgent: randomChoice(currentUserAgents),
-            // Thêm screen resolution
-            screenWidth: randomChoice([1920, 1366, 1536, 1440, 2560, 1280]),
-            screenHeight: randomChoice([1080, 768, 864, 900, 1440, 720]),
-            // Thêm timezone
+            userAgent: selectedUA,
+            screenWidth: selectedScreenResolution[0],
+            screenHeight: selectedScreenResolution[1],
             timezone: randomChoice([
                 'Asia/Ho_Chi_Minh',
                 'America/New_York', 
