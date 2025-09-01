@@ -1,12 +1,12 @@
 // ==UserScript==
-// @name        Enhanced Anti-bot detection
-// @namespace   Violentmonkey Scripts
-// @match       *://*/*
-// @grant       none
-// @version     1.2
-// @author      -
-// @description Evades detection by spoofing browser properties.
-// @run-at      document-start
+// @name         Anti-Automation Tab + UA (Updated 2024)
+// @namespace    http://test.local
+// @version      5.0
+// @description  Random fingerprint + User-Agent riêng cho mỗi tab với UA mới nhất
+// @match        https://sso.garena.com/universal/register*
+// @match        https://account.garena.com*
+// @match        https://sso.garena.com*
+// @grant        none
 // ==/UserScript==
 
 (function() {
@@ -128,9 +128,6 @@
 
     // 5. Clean the window.chrome object
     if (window.chrome) {
-        // Some detection scripts check for the presence of properties like `chrome.runtime`
-        // in non-extension contexts. While we can't remove it without breaking things,
-        // we can clean up other potential giveaways if needed.
         // For now, we keep it simple to avoid breaking legitimate functionality.
     }
 
@@ -147,5 +144,21 @@
             get: () => connection
         });
     }
+
+    // 7. Humanize navigation timing (pushState/replaceState)
+    const originalPushState = history.pushState;
+    const originalReplaceState = history.replaceState;
+
+    const humanizedStateChange = (originalFunc) => {
+        return function(...args) {
+            const delay = Math.random() * 100 + 50; // Random delay between 50ms and 150ms
+            setTimeout(() => {
+                originalFunc.apply(this, args);
+            }, delay);
+        };
+    };
+
+    history.pushState = humanizedStateChange(originalPushState);
+    history.replaceState = humanizedStateChange(originalReplaceState);
 
 })();
